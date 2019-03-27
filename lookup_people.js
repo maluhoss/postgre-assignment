@@ -13,14 +13,12 @@ const client = new pg.Client({
 
 const first_name = process.argv[2];
 
-client.connect((err) => {
+function findPeople (first_name, callback) {
+  client.query(`SELECT * FROM famous_people WHERE first_name LIKE CONCAT('%', $1::text, '%')`,[first_name], callback);
+};
+
+function displayPeople (err, result) {
   if (err) {
-    return console.error("Connection Error", err);
-  }
-  console.log('Searching...');
-  //Look up Name
-  client.query(`SELECT * FROM famous_people WHERE first_name LIKE CONCAT('%', $1::text, '%')`,[first_name], (err, result) => {
-    if (err) {
       return console.error("error running query", err);
     }
     let index = 0
@@ -28,7 +26,15 @@ client.connect((err) => {
     result.rows.forEach(function(row) {
       index += 1
       console.log(`- ${index}: ${row.first_name} ${row.last_name}, born ${row.birthdate}`);
-    }); //output: 1
-    client.end();
   })
-});
+};
+
+client.connect((err) => {
+  if (err) {
+    return console.error("Connection Error", err);
+  }
+  console.log('Searching...');
+
+  findPeople(first_name, displayPeople);
+    // client.end();
+  });
